@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
-  title: "Golf Charity Subscription | Digital Heroes",
+  title: "AltruSwing",
   description: "Track your scores, win prizes, and support great causes.",
 };
 
