@@ -1,0 +1,293 @@
+-- =============================================================================
+-- Digital Heroes Golf — PostgreSQL Schema
+-- =============================================================================
+-- Derived from every mock-data field across:
+--   /dashboard (subscriber overview)
+--   /dashboard/scores (score entry + history)
+--   /dashboard/settings (subscription, charity, profile, notifications)
+--   /dashboard/winnings (payout history)
+--   /admin (overview + reports)
+--   /admin/users (user table)
+--   /admin/draws (config, simulation, history)
+--   /admin/charities (CRUD grid)
+--   /admin/winners (verification + payout)
+--   Shared: DrawConfigPanel, SimulationTable, PhilanthropicImpact, MonthlyDraw
+-- =============================================================================
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 1. USERS
+-- Sources: /admin/users table, /dashboard header, /dashboard/settings profile
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE users (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email           VARCHAR(255) UNIQUE NOT NULL,
+    password_hash   VARCHAR(255) NOT NULL,
+    name            VARCHAR(255) NOT NULL,
+    handicap        NUMERIC(4,1),           -- e.g. 8.0, 14.2
+    home_course     VARCHAR(255),           -- settings page: "Pebble Beach Golf Links"
+    role            VARCHAR(20) NOT NULL DEFAULT 'subscriber'
+                        CHECK (role IN ('subscriber','admin')),
+    status          VARCHAR(20) NOT NULL DEFAULT 'active'
+                        CHECK (status IN ('active','suspended','expired')),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX idx_users_email   ON users(email);
+CREATE INDEX idx_users_status  ON users(status);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 2. SUBSCRIPTIONS
+-- Sources: /dashboard header (Active, Premium, renewal date),
+--          /dashboard/settings (plan, price, billing history),
+--          /admin/users (subscription column: Standard / Premium / Elite)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE subscriptions (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    plan            VARCHAR(20) NOT NULL
+                        CHECK (plan IN ('standard','premium','elite')),
+    status          VARCHAR(20) NOT NULL DEFAULT 'active'
+                        CHECK (status IN ('active','inactive','canceled','past_due')),
+    price_cents     INTEGER NOT NULL,       -- e.g. 2999 = $29.99/mo
+    renewal_date    DATE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX idx_subscriptions_user ON subscriptions(user_id);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 3. BILLING HISTORY
+-- Sources: /dashboard/settings "Recent Billing" rows
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE billing_history (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    billing_date    DATE NOT NULL,
+    amount_cents    INTEGER NOT NULL,       -- 2999
+    status          VARCHAR(20) NOT NULL DEFAULT 'paid'
+                        CHECK (status IN ('paid','failed','refunded')),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_billing_sub ON billing_history(subscription_id);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4. SCORES (golf rounds)
+-- Sources: /dashboard ScoreEntry → RollingScores,
+--          /dashboard/scores table (date, course, stableford, verified)
+--          /admin/users "Rolling 5" column
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE scores (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    round_date      DATE NOT NULL,
+    course_name     VARCHAR(255) NOT NULL,
+    stableford      INTEGER NOT NULL,       -- the Stableford score
+    verified        BOOLEAN NOT NULL DEFAULT false,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_scores_user        ON scores(user_id);
+CREATE INDEX idx_scores_user_date   ON scores(user_id, round_date DESC);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 5. CHARITIES
+-- Sources: /charities list, /charities/[id] detail page,
+--          /admin/charities CRUD (name, category, region, image, status,
+--          contributions), /dashboard/settings charity card, PhilanthropicImpact
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE charities (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            VARCHAR(255) NOT NULL,
+    description     TEXT,
+    category        VARCHAR(100),           -- Education, Environment, Health, Crisis Relief, Oceans
+    region          VARCHAR(100),           -- Global, South America, Africa, Asia Pacific
+    image_url       TEXT,
+    website_url     TEXT,
+    status          VARCHAR(20) NOT NULL DEFAULT 'active'
+                        CHECK (status IN ('active','inactive','under_review')),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 6. USER CHARITY PREFERENCES
+-- Sources: /dashboard/settings "Charity & Contribution" (selected charity,
+--          contribution_percent 5-25%), PhilanthropicImpact component
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE user_charity_preferences (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                 UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    charity_id              UUID REFERENCES charities(id) ON DELETE SET NULL,
+    contribution_percent    INTEGER NOT NULL DEFAULT 15
+                                CHECK (contribution_percent BETWEEN 5 AND 25),
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX idx_user_charity_pref ON user_charity_preferences(user_id);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 7. DRAWS (prize cycles)
+-- Sources: /admin/draws history table (cycle, date, type, entries, pool, 
+--          winners count, status), DrawConfigPanel (algorithm, min_threshold,
+--          weight_bias), MonthlyDraw countdown, /admin overview "Active Draw Cycle"
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE draws (
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cycle_number                INTEGER UNIQUE NOT NULL,
+    draw_date                   DATE NOT NULL,
+    algorithm                   VARCHAR(20) NOT NULL DEFAULT 'random'
+                                    CHECK (algorithm IN ('random','weighted')),
+    min_participation_threshold INTEGER NOT NULL DEFAULT 15000,
+    weight_bias_factor          NUMERIC(4,2) NOT NULL DEFAULT 1.25,
+    total_entries               INTEGER NOT NULL DEFAULT 0,
+    prize_pool_cents            BIGINT NOT NULL DEFAULT 0,
+    total_winners               INTEGER NOT NULL DEFAULT 0,
+    status                      VARCHAR(20) NOT NULL DEFAULT 'scheduled'
+                                    CHECK (status IN ('scheduled','active','completed','published')),
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_draws_status ON draws(status);
+CREATE INDEX idx_draws_date   ON draws(draw_date DESC);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 8. DRAW TIERS (prize breakdown per draw)
+-- Sources: SimulationTable (tier level, name, payout per unit, liability),
+--          winner tier badges on /admin/winners and /dashboard/winnings
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE draw_tiers (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    draw_id             UUID NOT NULL REFERENCES draws(id) ON DELETE CASCADE,
+    tier_level          INTEGER NOT NULL,               -- 3, 4, 5
+    tier_name           VARCHAR(50) NOT NULL,            -- Grand Jackpot, Secondary Tier, Standard Match
+    payout_per_unit_cents BIGINT NOT NULL,               -- 25000000 = $250,000.00
+    estimated_winners   INTEGER NOT NULL DEFAULT 0,
+    total_liability_cents BIGINT NOT NULL DEFAULT 0,
+    UNIQUE (draw_id, tier_level)
+);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 9. DRAW ENTRIES (which users participate in which draw)
+-- Sources: /dashboard/settings "Draws Entered: 47",
+--          /admin/draws "entries" column
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE draw_entries (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    draw_id     UUID NOT NULL REFERENCES draws(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    entered_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (draw_id, user_id)
+);
+
+CREATE INDEX idx_draw_entries_draw ON draw_entries(draw_id);
+CREATE INDEX idx_draw_entries_user ON draw_entries(user_id);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 10. WINNERS (draw results + verification + payout)
+-- Sources: /admin/winners table (user, draw, tier, prize, submitted, verified,
+--          paid, screenshot), /dashboard/winnings (cycle, tier, prize, status)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE winners (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    draw_id         UUID NOT NULL REFERENCES draws(id) ON DELETE CASCADE,
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tier_level      INTEGER NOT NULL,               -- FK-like ref to draw_tiers.tier_level
+    tier_name       VARCHAR(50) NOT NULL,            -- denormalized for fast reads
+    prize_cents     BIGINT NOT NULL,
+    submitted_at    DATE,                            -- score submission date
+    verified        BOOLEAN NOT NULL DEFAULT false,
+    screenshot_url  TEXT,                            -- proof upload
+    payout_status   VARCHAR(20) NOT NULL DEFAULT 'pending'
+                        CHECK (payout_status IN ('pending','completed','failed')),
+    payout_date     DATE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_winners_draw   ON winners(draw_id);
+CREATE INDEX idx_winners_user   ON winners(user_id);
+CREATE INDEX idx_winners_payout ON winners(payout_status);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 11. NOTIFICATION PREFERENCES
+-- Sources: /dashboard/settings notification toggles (draw_results,
+--          score_verification, payout_updates, newsletter)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE notification_preferences (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                 UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    draw_results            BOOLEAN NOT NULL DEFAULT true,
+    score_verification      BOOLEAN NOT NULL DEFAULT true,
+    payout_updates          BOOLEAN NOT NULL DEFAULT true,
+    newsletter              BOOLEAN NOT NULL DEFAULT false,
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX idx_notif_pref_user ON notification_preferences(user_id);
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 12. ADMIN AUDIT LOG (optional, for admin action history)
+-- Sources: /admin "Publish Official Results" action, admin CRUD operations
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE admin_audit_log (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin_user_id   UUID REFERENCES users(id) ON DELETE SET NULL,
+    action          VARCHAR(255) NOT NULL,
+    target_table    VARCHAR(50),
+    target_id       UUID,
+    details         JSONB,
+    performed_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_audit_admin ON admin_audit_log(admin_user_id);
+CREATE INDEX idx_audit_time  ON admin_audit_log(performed_at DESC);
+
+
+-- =============================================================================
+-- SUMMARY
+-- =============================================================================
+-- 12 tables total:
+--   1.  users                     — profile, auth, role, handicap
+--   2.  subscriptions             — plan tier, status, renewal, price
+--   3.  billing_history           — invoice/payment records
+--   4.  scores                    — golf rounds (stableford, course, verified)
+--   5.  charities                 — org info, category, region, image
+--   6.  user_charity_preferences  — selected charity + contribution %
+--   7.  draws                     — prize cycles, algorithm config, pool
+--   8.  draw_tiers                — per-draw tier payout structure
+--   9.  draw_entries              — user ↔ draw participation
+--   10. winners                   — results, verification, payout tracking
+--   11. notification_preferences  — per-user toggle settings
+--   12. admin_audit_log           — admin action history
+-- =============================================================================

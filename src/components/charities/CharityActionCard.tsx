@@ -8,7 +8,7 @@ interface CharityActionCardProps {
 
 export function CharityActionCard({ charityName, description }: CharityActionCardProps) {
   return (
-    <div className="glass-card p-10 rounded-xl shadow-2xl shadow-on-surface/5 border border-outline-variant/15">
+    <div className="glass-card dark:glass-panel p-10 rounded-xl shadow-2xl shadow-on-surface/5 border border-outline-variant/15">
       <div className="flex items-center gap-3 mb-8">
         <ShieldCheck size={20} className="text-primary" />
         <span className="text-sm font-bold text-primary tracking-wide uppercase">
