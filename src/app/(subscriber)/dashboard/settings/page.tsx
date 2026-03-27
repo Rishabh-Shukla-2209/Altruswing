@@ -1,9 +1,30 @@
-import { CreditCard, Heart, User, Bell, Shield } from "lucide-react";
+"use client";
+
+import { CreditCard, Heart, User, Bell, Shield, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function SettingsPage() {
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsLoadingPortal(true);
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("No portal URL returned:", data.error);
+      }
+    } catch (error) {
+      console.error("Failed to generate portal session", error);
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
   return (
     <>
       {/* Header */}
@@ -47,11 +68,13 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <button className="px-6 py-2.5 rounded-xl bg-surface-container-highest border border-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-on-primary transition-all">
-                    Upgrade to Elite
-                  </button>
-                  <button className="px-6 py-2.5 rounded-xl bg-surface-container-highest border border-outline-variant/20 text-on-surface-variant font-bold text-sm hover:text-error hover:border-error/20 transition-all">
-                    Cancel
+                  <button 
+                    onClick={handleManageSubscription}
+                    disabled={isLoadingPortal}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-surface-container-highest border border-primary/10 text-primary font-bold text-sm hover:bg-primary hover:text-on-primary transition-all disabled:opacity-50"
+                  >
+                    {isLoadingPortal ? "Redirecting..." : "Manage Subscription"}
+                    {!isLoadingPortal && <ExternalLink size={16} />}
                   </button>
                 </div>
               </div>

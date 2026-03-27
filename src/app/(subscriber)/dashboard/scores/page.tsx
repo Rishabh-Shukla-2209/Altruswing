@@ -1,29 +1,38 @@
-import { TrendingUp, Edit3, Trash2 } from "lucide-react";
+"use client";
+import { useState, useEffect } from "react";
+import { TrendingUp, Edit3, Trash2, Loader2 } from "lucide-react";
 import { ScoreEntry } from "@/components/dashboard/ScoreEntry";
 import { RollingScores } from "@/components/dashboard/RollingScores";
-
-const rollingScores = [
-  { date: "Apr 12", value: 32 },
-  { date: "Apr 15", value: 35 },
-  { date: "Apr 18", value: 38 },
-  { date: "Apr 21", value: 36 },
-  { date: "Apr 24", value: 42, isLatest: true },
-];
-
-const scoreHistory = [
-  { id: 1, date: "Apr 24, 2024", course: "Pebble Beach GL", score: 42, stableford: 42, verified: true },
-  { id: 2, date: "Apr 21, 2024", course: "St Andrews Links", score: 36, stableford: 36, verified: true },
-  { id: 3, date: "Apr 18, 2024", course: "Augusta National", score: 38, stableford: 38, verified: true },
-  { id: 4, date: "Apr 15, 2024", course: "Royal Melbourne", score: 35, stableford: 35, verified: true },
-  { id: 5, date: "Apr 12, 2024", course: "Pinehurst No. 2", score: 32, stableford: 32, verified: true },
-  { id: 6, date: "Apr 08, 2024", course: "Whistling Straits", score: 29, stableford: 29, verified: false },
-  { id: 7, date: "Apr 04, 2024", course: "TPC Sawgrass", score: 34, stableford: 34, verified: true },
-  { id: 8, date: "Mar 30, 2024", course: "Bethpage State Park", score: 31, stableford: 31, verified: true },
-];
+import { useScores } from "@/hooks/useScores";
+import { createClient } from "@/utils/supabase/client";
 
 export default function ScoresPage() {
-  const avgScore = Math.round(scoreHistory.reduce((s, r) => s + r.score, 0) / scoreHistory.length);
-  const bestScore = Math.max(...scoreHistory.map((r) => r.score));
+  const [userId, setUserId] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setUserId(session.user.id);
+    });
+  }, [supabase.auth]);
+
+  const { data: scoreHistory = [], isLoading } = useScores(userId);
+
+  const avgScore = scoreHistory.length 
+    ? Math.round(scoreHistory.reduce((s: any, r: any) => s + r.stableford_score, 0) / scoreHistory.length) 
+    : 0;
+  const bestScore = scoreHistory.length 
+    ? Math.max(...scoreHistory.map((r: any) => r.stableford_score)) 
+    : 0;
+
+  const rollingScores = scoreHistory
+    .slice(0, 5)
+    .map((s: any, i: number) => ({
+      date: new Date(s.played_on).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      value: s.stableford_score,
+      isLatest: i === 0,
+    }))
+    .reverse();
 
   return (
     <>
@@ -97,27 +106,36 @@ export default function ScoresPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/5">
-                {scoreHistory.map((r) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-20 text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                    </td>
+                  </tr>
+                ) : scoreHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-on-surface-variant">
+                      No scores found.
+                    </td>
+                  </tr>
+                ) : (
+                  scoreHistory.map((r: any) => (
                   <tr
                     key={r.id}
                     className="group hover:bg-surface-container-highest/30 transition-colors"
                   >
-                    <td className="px-6 py-4 text-sm">{r.date}</td>
-                    <td className="px-6 py-4 text-sm font-medium">{r.course}</td>
+                    <td className="px-6 py-4 text-sm">{r.played_on ? new Date(r.played_on).toLocaleDateString() : "—"}</td>
+                    <td className="px-6 py-4 text-sm font-medium">Digital Heroes Golf Club</td> {/* Hardcoded generic course for now */}
                     <td className="px-6 py-4">
                       <span className="text-lg font-black font-headline text-primary">
-                        {r.stableford}
+                        {r.stableford_score}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${
-                          r.verified
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                        }`}
+                        className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border bg-emerald-500/10 text-emerald-400 border-emerald-500/20`}
                       >
-                        {r.verified ? "Verified" : "Pending"}
+                        Verified
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -137,7 +155,8 @@ export default function ScoresPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -1,3 +1,4 @@
+"use client";
 import {
   Plus,
   Play,
@@ -5,50 +6,15 @@ import {
   BarChart3,
   SlidersHorizontal,
   Info,
+  Loader2,
 } from "lucide-react";
+import { useDraws } from "@/hooks/useDraws";
 import { DrawConfigPanel } from "@/components/admin/DrawConfigPanel";
 import { SimulationTable } from "@/components/admin/SimulationTable";
 
-const drawHistory = [
-  {
-    id: "#882",
-    date: "Apr 24, 2024",
-    type: "Random",
-    entries: "15,482",
-    pool: "$337,030",
-    winners: 857,
-    status: "Published",
-  },
-  {
-    id: "#881",
-    date: "Apr 10, 2024",
-    type: "Weighted",
-    entries: "14,901",
-    pool: "$312,800",
-    winners: 802,
-    status: "Published",
-  },
-  {
-    id: "#880",
-    date: "Mar 24, 2024",
-    type: "Random",
-    entries: "13,210",
-    pool: "$298,500",
-    winners: 744,
-    status: "Published",
-  },
-  {
-    id: "#883",
-    date: "May 08, 2024",
-    type: "Random",
-    entries: "—",
-    pool: "—",
-    winners: 0,
-    status: "Scheduled",
-  },
-];
-
 export default function DrawsPage() {
+  const { data: drawHistory = [], isLoading } = useDraws();
+  
   return (
     <>
       {/* Header */}
@@ -148,25 +114,38 @@ export default function DrawsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/5">
-              {drawHistory.map((d) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-8 py-20 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                  </td>
+                </tr>
+              ) : drawHistory.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-8 py-10 text-center text-on-surface-variant">
+                    No draws found.
+                  </td>
+                </tr>
+              ) : (
+                drawHistory.map((d: any) => (
                 <tr
                   key={d.id}
                   className="group hover:bg-surface-container-highest/30 transition-colors"
                 >
                   <td className="px-8 py-5 font-mono text-primary font-bold text-sm">
-                    {d.id}
+                    {d.id.substring(0, 8)}
                   </td>
-                  <td className="px-8 py-5 text-sm">{d.date}</td>
+                  <td className="px-8 py-5 text-sm">{d.draw_month}</td>
                   <td className="px-8 py-5">
                     <span className="px-2 py-1 rounded-md bg-surface-container-highest text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                      {d.type}
+                      Random
                     </span>
                   </td>
-                  <td className="px-8 py-5 text-sm font-mono">{d.entries}</td>
+                  <td className="px-8 py-5 text-sm font-mono">—</td>
                   <td className="px-8 py-5 text-sm font-mono font-bold">
-                    {d.pool}
+                    ${(d.total_pool_cents / 100).toFixed(2)}
                   </td>
-                  <td className="px-8 py-5 text-sm">{d.winners || "—"}</td>
+                  <td className="px-8 py-5 text-sm">—</td>
                   <td className="px-8 py-5">
                     <span
                       className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${
@@ -191,7 +170,8 @@ export default function DrawsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

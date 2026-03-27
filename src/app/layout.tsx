@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
 
 // Using Inter for a clean, modern aesthetic
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -26,15 +27,16 @@ export default function RootLayout({
           inter.variable,
           manrope.variable,
         )}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <main className="flex min-h-screen flex-col">{children}</main>
-        </ThemeProvider>
+      ><ReactQueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <main className="flex min-h-screen flex-col">{children}</main>
+          </ThemeProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

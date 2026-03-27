@@ -1,45 +1,21 @@
-import { Trophy, DollarSign, Download, Eye } from "lucide-react";
-
-const winnings = [
-  {
-    id: "W-001",
-    drawCycle: "#882",
-    date: "Apr 24, 2024",
-    tier: "Secondary Tier",
-    tierLevel: 4,
-    prize: "$1,200.00",
-    status: "Completed",
-  },
-  {
-    id: "W-002",
-    drawCycle: "#878",
-    date: "Mar 24, 2024",
-    tier: "Standard Match",
-    tierLevel: 3,
-    prize: "$45.00",
-    status: "Completed",
-  },
-  {
-    id: "W-003",
-    drawCycle: "#871",
-    date: "Feb 10, 2024",
-    tier: "Standard Match",
-    tierLevel: 3,
-    prize: "$45.00",
-    status: "Completed",
-  },
-  {
-    id: "W-004",
-    drawCycle: "#865",
-    date: "Jan 15, 2024",
-    tier: "Standard Match",
-    tierLevel: 3,
-    prize: "$45.00",
-    status: "Pending",
-  },
-];
+"use client";
+import { useState, useEffect } from "react";
+import { Trophy, DollarSign, Download, Eye, Loader2 } from "lucide-react";
+import { useUserWinnings } from "@/hooks/useWinners";
+import { createClient } from "@/utils/supabase/client";
 
 export default function WinningsPage() {
+  const [userId, setUserId] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setUserId(session.user.id);
+    });
+  }, [supabase.auth]);
+
+  const { data: winnings = [], isLoading } = useUserWinnings(userId);
+
   return (
     <>
       {/* Header */}
@@ -155,42 +131,55 @@ export default function WinningsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/5">
-                {winnings.map((w) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-20 text-center">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                    </td>
+                  </tr>
+                ) : winnings.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-on-surface-variant">
+                      No winnings yet.
+                    </td>
+                  </tr>
+                ) : (
+                  winnings.map((w: any) => (
                   <tr
                     key={w.id}
                     className="group hover:bg-surface-container-highest/30 transition-colors"
                   >
                     <td className="px-6 py-5 font-mono text-primary text-sm font-bold">
-                      {w.drawCycle}
+                      {w.draws?.draw_month}
                     </td>
-                    <td className="px-6 py-5 text-sm">{w.date}</td>
+                    <td className="px-6 py-5 text-sm">{w.created_at ? new Date(w.created_at).toLocaleDateString() : "—"}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
-                            w.tierLevel >= 4
+                            w.matched_count >= 4
                               ? "bg-primary/10 text-primary"
                               : "bg-surface-container-highest text-outline"
                           }`}
                         >
-                          {w.tierLevel}
+                          {w.matched_count}
                         </div>
-                        <span className="text-sm">{w.tier}</span>
+                        <span className="text-sm">Tier {w.matched_count}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5 font-mono text-lg font-bold">
-                      {w.prize}
+                      ${(w.prize_cents / 100).toFixed(2)}
                     </td>
                     <td className="px-6 py-5">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${
-                          w.status === "Completed"
+                          w.payment_status === "Completed"
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                             : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                         }`}
                       >
                         <DollarSign size={10} />
-                        {w.status}
+                        {w.payment_status}
                       </span>
                     </td>
                     <td className="px-6 py-5">
@@ -202,7 +191,8 @@ export default function WinningsPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>

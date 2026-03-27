@@ -1,3 +1,4 @@
+"use client";
 import {
   Search,
   CheckCircle2,
@@ -5,78 +6,13 @@ import {
   Eye,
   DollarSign,
   Download,
+  Loader2,
 } from "lucide-react";
+import { useWinners } from "@/hooks/useWinners";
 import { Input } from "@/components/ui/input";
 
-const winners = [
-  {
-    id: "W-001",
-    user: "Maria Rodriguez",
-    email: "maria.r@example.com",
-    drawCycle: "#882",
-    tier: "Grand Jackpot",
-    tierLevel: 5,
-    prize: "$250,000.00",
-    submitted: "Apr 25, 2024",
-    verified: true,
-    paid: false,
-    screenshot: true,
-  },
-  {
-    id: "W-002",
-    user: "Alex Morgan",
-    email: "alex.morgan@example.com",
-    drawCycle: "#882",
-    tier: "Secondary Tier",
-    tierLevel: 4,
-    prize: "$1,200.00",
-    submitted: "Apr 25, 2024",
-    verified: true,
-    paid: true,
-    screenshot: true,
-  },
-  {
-    id: "W-003",
-    user: "Sarah Chen",
-    email: "sarah.chen@example.com",
-    drawCycle: "#882",
-    tier: "Standard Match",
-    tierLevel: 3,
-    prize: "$45.00",
-    submitted: "Apr 24, 2024",
-    verified: false,
-    paid: false,
-    screenshot: true,
-  },
-  {
-    id: "W-004",
-    user: "James Wilson",
-    email: "james.wilson@example.com",
-    drawCycle: "#881",
-    tier: "Secondary Tier",
-    tierLevel: 4,
-    prize: "$1,200.00",
-    submitted: "Apr 11, 2024",
-    verified: true,
-    paid: true,
-    screenshot: true,
-  },
-  {
-    id: "W-005",
-    user: "David Kim",
-    email: "david.kim@example.com",
-    drawCycle: "#881",
-    tier: "Standard Match",
-    tierLevel: 3,
-    prize: "$45.00",
-    submitted: "Apr 10, 2024",
-    verified: true,
-    paid: true,
-    screenshot: false,
-  },
-];
-
 export default function WinnersPage() {
+  const { data: winners = [], isLoading } = useWinners();
   return (
     <>
       {/* Header */}
@@ -185,44 +121,57 @@ export default function WinnersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/5">
-              {winners.map((w) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-20 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                  </td>
+                </tr>
+              ) : winners.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-10 text-center text-on-surface-variant">
+                    No winners found.
+                  </td>
+                </tr>
+              ) : (
+                winners.map((w: any) => (
                 <tr
                   key={w.id}
                   className="group hover:bg-surface-container-highest/30 transition-colors"
                 >
                   <td className="px-6 py-5">
                     <div>
-                      <div className="font-medium text-sm">{w.user}</div>
+                      <div className="font-medium text-sm">{w.profiles?.email?.split('@')[0] || "User"}</div>
                       <div className="text-xs text-on-surface-variant">
-                        {w.email}
+                        {w.profiles?.email}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5 font-mono text-primary text-sm font-bold">
-                    {w.drawCycle}
+                    {w.draws?.draw_month}
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
-                          w.tierLevel === 5
+                          w.matched_count === 5
                             ? "bg-primary/10 text-primary"
                             : "bg-surface-container-highest text-outline"
                         }`}
                       >
-                        {w.tierLevel}
+                        {w.matched_count}
                       </div>
-                      <span className="text-sm">{w.tier}</span>
+                      <span className="text-sm">Tier {w.matched_count}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5 font-mono text-sm font-bold">
-                    {w.prize}
+                    ${(w.prize_cents / 100).toFixed(2)}
                   </td>
                   <td className="px-6 py-5 text-sm text-on-surface-variant">
-                    {w.submitted}
+                    {w.created_at ? new Date(w.created_at).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-6 py-5">
-                    {w.verified ? (
+                    {w.payment_status === "Completed" ? (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
                         <CheckCircle2 size={10} />
                         Verified
@@ -235,7 +184,7 @@ export default function WinnersPage() {
                     )}
                   </td>
                   <td className="px-6 py-5">
-                    {w.paid ? (
+                    {w.payment_status === "Completed" ? (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
                         <DollarSign size={10} />
                         Completed
@@ -249,7 +198,7 @@ export default function WinnersPage() {
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-1">
-                      {w.screenshot && (
+                      {w.proof_image_url && (
                         <button
                           className="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors"
                           title="View Screenshot"
@@ -257,7 +206,7 @@ export default function WinnersPage() {
                           <Eye size={14} />
                         </button>
                       )}
-                      {!w.verified && (
+                      {w.payment_status !== "Completed" && (
                         <button
                           className="p-2 rounded-lg hover:bg-emerald-500/10 text-on-surface-variant hover:text-emerald-400 transition-colors"
                           title="Verify"
@@ -265,7 +214,7 @@ export default function WinnersPage() {
                           <CheckCircle2 size={14} />
                         </button>
                       )}
-                      {w.verified && !w.paid && (
+                      {w.payment_status !== "Completed" && (
                         <button
                           className="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-colors"
                           title="Mark as Paid"
@@ -276,7 +225,8 @@ export default function WinnersPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

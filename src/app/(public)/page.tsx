@@ -4,6 +4,7 @@ import Footer from "@/components/shared/Footer";
 import { TrendingUp, FileText, Medal, Heart, ArrowRight } from "lucide-react";
 import { CharityCard } from "@/components/shared/CharityCard";
 import { MobileNav } from "@/components/shared/MobileNav";
+import CharitiesOverview from "@/components/charities/CharitiesOverview";
 
 export default function LandingPage() {
   const charities = [
@@ -49,7 +50,9 @@ export default function LandingPage() {
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest/50 border border-outline-variant/20">
               <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(186,195,255,0.6)]"></span>
-              <span className="text-[0.65rem] font-label uppercase tracking-widest text-primary">Digital Curator Series</span>
+              <span className="text-[0.65rem] font-label uppercase tracking-widest text-primary">
+                Digital Curator Series
+              </span>
             </div>
             <h1 className="text-6xl md:text-8xl font-headline font-extrabold tracking-tight leading-[0.9] text-on-surface">
               AltruSwing<span className="text-primary">.</span>
@@ -61,7 +64,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-4 pt-4">
               <Link
                 href="/signup"
-                className="bg-gradient-to-r from-primary to-primary-container text-on-primary px-8 py-4 rounded-xl font-bold text-lg hover:scale-[1.05] transition-transform duration-300 shadow-xl shadow-primary/20 inline-block text-center"
+                className="bg-linear-to-r from-primary to-primary-container text-on-primary px-8 py-4 rounded-xl font-bold text-lg hover:scale-[1.05] transition-transform duration-300 shadow-xl shadow-primary/20 inline-block text-center"
               >
                 Start Playing with Purpose
               </Link>
@@ -152,14 +155,16 @@ export default function LandingPage() {
                 Compete & Win
               </h3>
               <p className="text-on-surface-variant mb-6 leading-relaxed">
-                Each verified round enters you into our monthly prize pool.
-                The better you play, the more entries you earn.
+                Each verified round enters you into our monthly prize pool. The
+                better you play, the more entries you earn.
               </p>
               <div className="bg-surface-container-lowest dark:bg-surface-container-lowest/50 rounded-xl p-4 border border-outline-variant/5 flex items-center gap-3">
                 <Medal className="text-secondary" size={24} />
                 <div>
                   <p className="text-xs font-bold">12 Active Entries</p>
-                  <p className="text-[0.65rem] text-on-surface-variant">Monthly Jackpot Draw</p>
+                  <p className="text-[0.65rem] text-on-surface-variant">
+                    Monthly Jackpot Draw
+                  </p>
                 </div>
               </div>
             </div>
@@ -177,7 +182,9 @@ export default function LandingPage() {
                 to our verified partner charities.
               </p>
               <div className="bg-surface-container-lowest dark:bg-surface-container-lowest/50 rounded-xl p-4 border border-outline-variant/5">
-                <span className="text-[0.65rem] font-bold uppercase tracking-widest text-on-surface-variant">842 Lives Impacted</span>
+                <span className="text-[0.65rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                  842 Lives Impacted
+                </span>
               </div>
             </div>
           </div>
@@ -195,7 +202,7 @@ export default function LandingPage() {
             Monthly Prize Pool
           </p>
           <div className="text-6xl md:text-9xl font-headline font-black tracking-tighter text-primary dark:text-white dark:text-glow mb-8 italic">
-            $150,000.00
+            ₹ 1, 50, 00, 000
           </div>
           <div className="max-w-lg mx-auto">
             <p className="text-on-surface-variant text-lg md:text-xl font-medium tracking-wide italic">
@@ -205,7 +212,7 @@ export default function LandingPage() {
           </div>
           <Link
             href="/signup"
-            className="bg-gradient-to-r from-primary to-primary-container text-on-primary px-8 py-4 rounded-xl font-bold text-lg hover:scale-[1.05] transition-transform duration-300 shadow-xl shadow-primary/20 uppercase inline-block text-center"
+            className="bg-linear-to-r from-primary to-primary-container text-on-primary px-8 py-4 rounded-xl font-bold text-lg hover:scale-[1.05] transition-transform duration-300 shadow-xl shadow-primary/20 uppercase inline-block text-center"
           >
             Join the Draw
           </Link>
@@ -294,7 +301,7 @@ export default function LandingPage() {
                       Total Contributed
                     </p>
                     <p className="text-4xl font-headline font-black text-primary">
-                      $2,450
+                      ₹22,450
                     </p>
                   </div>
                 </div>
@@ -303,12 +310,6 @@ export default function LandingPage() {
                     Your contributions this month provided clean water access
                     for a village of 40 people in East Africa.
                   </p>
-                  <Link
-                    href="/impact"
-                    className="inline-flex items-center text-xs font-black uppercase tracking-widest text-primary hover:gap-2 transition-all"
-                  >
-                    View Full Report <ArrowRight size={16} className="ml-1" />
-                  </Link>
                 </div>
               </div>
             </div>
@@ -335,16 +336,7 @@ export default function LandingPage() {
               View all charities
             </Link>
           </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            {charities.map((charity) => (
-              <CharityCard
-                key={charity.id}
-                name={charity.name}
-                description={charity.desc}
-                imageUrl={charity.img}
-              />
-            ))}
-          </div>
+          <CharitiesOverview />
         </div>
       </section>
 
@@ -358,7 +350,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-center gap-6">
             <Link
               href="/signup"
-              className="bg-gradient-to-r from-primary to-primary-container text-on-primary px-12 py-5 rounded-2xl font-bold text-xl hover:scale-[1.05] transition-transform duration-300 shadow-2xl shadow-primary/30 inline-block"
+              className="bg-linear-to-r from-primary to-primary-container text-on-primary px-12 py-5 rounded-2xl font-bold text-xl hover:scale-[1.05] transition-transform duration-300 shadow-2xl shadow-primary/30 inline-block"
             >
               Join the Next Draw
             </Link>
@@ -367,11 +359,19 @@ export default function LandingPage() {
             </p>
             <div className="flex items-center gap-2 mt-4">
               <div className="flex -space-x-3">
-                <div className="w-8 h-8 rounded-full border-2 border-surface bg-surface-bright flex items-center justify-center text-[0.5rem] font-bold">JD</div>
-                <div className="w-8 h-8 rounded-full border-2 border-surface bg-primary/40 flex items-center justify-center text-[0.5rem] font-bold">AK</div>
-                <div className="w-8 h-8 rounded-full border-2 border-surface bg-secondary-container flex items-center justify-center text-[0.5rem] font-bold">ML</div>
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-surface-bright flex items-center justify-center text-[0.5rem] font-bold">
+                  JD
+                </div>
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-primary/40 flex items-center justify-center text-[0.5rem] font-bold">
+                  AK
+                </div>
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-secondary-container flex items-center justify-center text-[0.5rem] font-bold">
+                  ML
+                </div>
               </div>
-              <span className="text-xs text-on-surface-variant font-medium">+1,402 joined today</span>
+              <span className="text-xs text-on-surface-variant font-medium">
+                +1,402 joined today
+              </span>
             </div>
           </div>
         </div>

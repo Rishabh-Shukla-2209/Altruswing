@@ -106,21 +106,6 @@ export default function DashboardPage() {
         <aside className="space-y-8">
           <PhilanthropicImpact />
           <MonthlyDraw />
-
-          {/* Priority Support */}
-          <Link
-            href="#"
-            className="bg-primary-container/10 p-6 rounded-xl border border-primary-container/20 flex items-center justify-between group hover:bg-primary-container/20 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <HeadphonesIcon size={20} className="text-primary" />
-              <span className="font-headline font-bold">Priority Support</span>
-            </div>
-            <ArrowRight
-              size={20}
-              className="text-on-surface-variant group-hover:text-primary transition-colors"
-            />
-          </Link>
         </aside>
       </div>
     </>
