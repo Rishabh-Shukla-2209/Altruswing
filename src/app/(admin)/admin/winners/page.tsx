@@ -4,7 +4,7 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
-  DollarSign,
+  IndianRupee,
   Download,
   Loader2,
 } from "lucide-react";
@@ -135,96 +135,95 @@ export default function WinnersPage() {
                 </tr>
               ) : (
                 winners.map((w: any) => (
-                <tr
-                  key={w.id}
-                  className="group hover:bg-surface-container-highest/30 transition-colors"
-                >
-                  <td className="px-6 py-5">
-                    <div>
-                      <div className="font-medium text-sm">{w.profiles?.email?.split('@')[0] || "User"}</div>
-                      <div className="text-xs text-on-surface-variant">
-                        {w.profiles?.email}
+                  <tr
+                    key={w.id}
+                    className="group hover:bg-surface-container-highest/30 transition-colors"
+                  >
+                    <td className="px-6 py-5">
+                      <div>
+                        <div className="font-medium text-sm">{w.profiles?.email?.split('@')[0] || "User"}</div>
+                        <div className="text-xs text-on-surface-variant">
+                          {w.profiles?.email}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 font-mono text-primary text-sm font-bold">
-                    {w.draws?.draw_month}
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${
-                          w.matched_count === 5
-                            ? "bg-primary/10 text-primary"
-                            : "bg-surface-container-highest text-outline"
-                        }`}
-                      >
-                        {w.matched_count}
+                    </td>
+                    <td className="px-6 py-5 font-mono text-primary text-sm font-bold">
+                      {w.draws?.draw_month}
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold ${w.matched_count === 5
+                              ? "bg-primary/10 text-primary"
+                              : "bg-surface-container-highest text-outline"
+                            }`}
+                        >
+                          {w.matched_count}
+                        </div>
+                        <span className="text-sm">Tier {w.matched_count}</span>
                       </div>
-                      <span className="text-sm">Tier {w.matched_count}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 font-mono text-sm font-bold">
-                    ${(w.prize_cents / 100).toFixed(2)}
-                  </td>
-                  <td className="px-6 py-5 text-sm text-on-surface-variant">
-                    {w.created_at ? new Date(w.created_at).toLocaleDateString() : "—"}
-                  </td>
-                  <td className="px-6 py-5">
-                    {w.payment_status === "Completed" ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-                        <CheckCircle2 size={10} />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-widest border border-amber-500/20">
-                        <XCircle size={10} />
-                        Pending
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-5">
-                    {w.payment_status === "Completed" ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
-                        <DollarSign size={10} />
-                        Completed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-error/10 text-error text-[10px] font-bold uppercase tracking-widest border border-error/20">
-                        <DollarSign size={10} />
-                        Pending
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-1">
-                      {w.proof_image_url && (
-                        <button
-                          className="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors"
-                          title="View Screenshot"
-                        >
-                          <Eye size={14} />
-                        </button>
+                    </td>
+                    <td className="px-6 py-5 font-mono text-sm font-bold">
+                      ${(w.prize_cents / 100).toFixed(2)}
+                    </td>
+                    <td className="px-6 py-5 text-sm text-on-surface-variant">
+                      {w.created_at ? new Date(w.created_at).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-6 py-5">
+                      {w.payment_status === "Completed" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+                          <CheckCircle2 size={10} />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-widest border border-amber-500/20">
+                          <XCircle size={10} />
+                          Pending
+                        </span>
                       )}
-                      {w.payment_status !== "Completed" && (
-                        <button
-                          className="p-2 rounded-lg hover:bg-emerald-500/10 text-on-surface-variant hover:text-emerald-400 transition-colors"
-                          title="Verify"
-                        >
-                          <CheckCircle2 size={14} />
-                        </button>
+                    </td>
+                    <td className="px-6 py-5">
+                      {w.payment_status === "Completed" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
+                          <IndianRupee size={10} />
+                          Completed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-error/10 text-error text-[10px] font-bold uppercase tracking-widest border border-error/20">
+                          <IndianRupee size={10} />
+                          Pending
+                        </span>
                       )}
-                      {w.payment_status !== "Completed" && (
-                        <button
-                          className="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-colors"
-                          title="Mark as Paid"
-                        >
-                          <DollarSign size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-1">
+                        {w.proof_image_url && (
+                          <button
+                            className="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors"
+                            title="View Screenshot"
+                          >
+                            <Eye size={14} />
+                          </button>
+                        )}
+                        {w.payment_status !== "Completed" && (
+                          <button
+                            className="p-2 rounded-lg hover:bg-emerald-500/10 text-on-surface-variant hover:text-emerald-400 transition-colors"
+                            title="Verify"
+                          >
+                            <CheckCircle2 size={14} />
+                          </button>
+                        )}
+                        {w.payment_status !== "Completed" && (
+                          <button
+                            className="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-colors"
+                            title="Mark as Paid"
+                          >
+                            <IndianRupee size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>

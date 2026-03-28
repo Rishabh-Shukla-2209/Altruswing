@@ -6,7 +6,6 @@ import { LayoutDashboard, Flag, Medal, CreditCard, PlusCircle } from "lucide-rea
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/scores", label: "Performance", icon: Flag },
   { href: "/dashboard/winnings", label: "Rewards", icon: Medal },
   { href: "/dashboard/settings", label: "Subscriptions", icon: CreditCard },
 ];
@@ -29,11 +28,10 @@ export function DashboardSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${
-                isActive
-                  ? "bg-surface-container text-primary shadow-[0_0_10px_rgba(186,195,255,0.1)]"
-                  : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-              }`}
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${isActive
+                ? "bg-surface-container text-primary shadow-[0_0_10px_rgba(186,195,255,0.1)]"
+                : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                }`}
             >
               <item.icon size={20} />
               <span className="font-label text-sm uppercase tracking-wide">
@@ -43,12 +41,6 @@ export function DashboardSidebar() {
           );
         })}
       </nav>
-      <div className="mt-auto px-4 pb-12">
-        <button className="w-full py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-          <PlusCircle size={20} />
-          Log Round
-        </button>
-      </div>
     </aside>
   );
 }

@@ -1,11 +1,11 @@
-import { AlertTriangle, LockOpen, Users, DollarSign, Heart, Trophy } from "lucide-react";
+import { AlertTriangle, LockOpen, Users, IndianRupee, Heart, Trophy } from "lucide-react";
 import Link from "next/link";
 import { DrawConfigPanel } from "@/components/admin/DrawConfigPanel";
 import { SimulationTable } from "@/components/admin/SimulationTable";
 
 const reportStats = [
   { label: "Total Users", value: "14,208", change: "+312 this month", icon: Users, color: "text-primary", border: "border-primary", href: "/admin/users" },
-  { label: "Total Prize Pool", value: "$4.2M", change: "Cycle #883 pending", icon: DollarSign, color: "text-secondary", border: "border-secondary", href: "/admin/draws" },
+  { label: "Total Prize Pool", value: "$4.2M", change: "Cycle #883 pending", icon: IndianRupee, color: "text-secondary", border: "border-secondary", href: "/admin/draws" },
   { label: "Charity Contributions", value: "$402,900", change: "24 active partners", icon: Heart, color: "text-emerald-400", border: "border-emerald-400", href: "/admin/charities" },
   { label: "Draw Statistics", value: "882", change: "99.82% algo confidence", icon: Trophy, color: "text-amber-400", border: "border-amber-400", href: "/admin/draws" },
 ];

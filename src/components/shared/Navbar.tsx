@@ -67,6 +67,12 @@ export default function Navbar() {
           >
             Charities
           </Link>
+          {user && <Link
+            href="/dashboard"
+            className="text-slate-500 dark:text-on-surface-variant hover:text-primary dark:hover:text-on-surface transition-colors font-headline tracking-tight font-medium text-sm"
+          >
+            Dashboard
+          </Link>}
         </div>
 
         {/* Right Actions */}

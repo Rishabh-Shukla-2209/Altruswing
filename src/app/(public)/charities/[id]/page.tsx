@@ -5,7 +5,6 @@ import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { MobileNav } from "@/components/shared/MobileNav";
 import { CharityHero } from "@/components/charities/CharityHero";
-import { ImpactMetrics } from "@/components/charities/ImpactMetrics";
 import { CharityActionCard } from "@/components/charities/CharityActionCard";
 import { EventsCard } from "@/components/charities/EventsCard";
 import { useCharity } from "@/hooks/useCharities";
@@ -128,6 +127,7 @@ export default function CharityDetailPage() {
             <div className="lg:col-span-4">
               <div className="sticky top-32 space-y-10">
                 <CharityActionCard
+                  charityId={charity.id}
                   charityName={charity.name}
                   description="Join a global community of conservationists protecting the world's most important ecosystem."
                 />
