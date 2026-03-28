@@ -19,10 +19,35 @@ export async function logNewScore(scoreValue: number) {
         .insert({
             user_id: user.id,
             stableford_score: scoreValue,
+            played_on: new Date().toISOString(),
         });
 
     if (insertError) {
         throw new Error(insertError.message);
+    }
+
+    // 3. Enforce 5 score limit rule
+    const { data: userScores, error: fetchError } = await supabase
+        .from("scores")
+        .select("id")
+        .eq("user_id", user.id)
+        .order("played_on", { ascending: false })
+        .order("created_at", { ascending: false });
+
+    if (fetchError) {
+        throw new Error(fetchError.message);
+    }
+
+    if (userScores && userScores.length > 5) {
+        const scoresToDelete = userScores.slice(5).map(s => s.id);
+        const { error: deleteError } = await supabase
+            .from("scores")
+            .delete()
+            .in("id", scoresToDelete);
+
+        if (deleteError) {
+            throw new Error(deleteError.message);
+        }
     }
 
     // 3. Purge the Next.js cache for the dashboard

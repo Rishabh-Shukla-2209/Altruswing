@@ -112,5 +112,38 @@ export async function POST(req: Request) {
     console.log(`🔴 Successfully revoked subscription for customer ${customerId}`);
   }
 
+  else if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice & { subscription?: string };
+    if (invoice.subscription) {
+      const customerId = invoice.customer as string;
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({ subscription_status: "active" })
+        .eq("stripe_customer_id", customerId);
+
+      if (error) {
+        console.error("Error updating subscription status:", error.message);
+        return new NextResponse("Database Error", { status: 500 });
+      }
+      console.log(`🟢 Successfully processed successful payment for customer ${customerId}`);
+    }
+  }
+  else if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice & { subscription?: string };
+    if (invoice.subscription) {
+      const customerId = invoice.customer as string;
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({ subscription_status: "past_due" })
+        .eq("stripe_customer_id", customerId);
+
+      if (error) {
+        console.error("Error updating subscription status to past_due:", error.message);
+        return new NextResponse("Database Error", { status: 500 });
+      }
+      console.log(`🔴 Handling failed payment for customer ${customerId}`);
+    }
+  }
+
   return new NextResponse(null, { status: 200 });
 }

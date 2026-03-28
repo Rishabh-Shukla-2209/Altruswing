@@ -18,6 +18,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_status")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profile?.subscription_status === "active" || profile?.subscription_status === "canceling") {
+      return NextResponse.json({ error: "You already have an active subscription." }, { status: 400 });
+    }
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],

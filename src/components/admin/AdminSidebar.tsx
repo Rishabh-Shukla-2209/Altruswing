@@ -41,11 +41,10 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm tracking-wide transition-all duration-300 active:scale-95 ${
-                isActive
-                  ? "text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary-container/10 to-transparent"
-                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm tracking-wide transition-all duration-300 active:scale-95 ${isActive
+                ? "text-primary font-bold border-r-2 border-primary bg-gradient-to-r from-primary-container/10 to-transparent"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
+                }`}
             >
               <item.icon size={20} />
               <span className="font-headline">{item.label}</span>
@@ -53,26 +52,7 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-      <div className="mt-auto space-y-1">
-        <button className="w-full mb-6 py-3 px-4 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm tracking-tight flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-          <Plus size={16} />
-          New Draw
-        </button>
-        <Link
-          href="/admin"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm tracking-wide text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-300"
-        >
-          <Settings size={20} />
-          <span className="font-headline">Settings</span>
-        </Link>
-        <Link
-          href="/admin"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm tracking-wide text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-300"
-        >
-          <HelpCircle size={20} />
-          <span className="font-headline">Support</span>
-        </Link>
-      </div>
+
     </aside>
   );
 }

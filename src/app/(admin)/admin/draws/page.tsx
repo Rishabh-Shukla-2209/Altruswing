@@ -1,20 +1,24 @@
-"use client";
-import {
-  Plus,
-  Play,
-  Eye,
-  BarChart3,
-  SlidersHorizontal,
-  Info,
-  Loader2,
-} from "lucide-react";
-import { useDraws } from "@/hooks/useDraws";
-import { DrawConfigPanel } from "@/components/admin/DrawConfigPanel";
-import { SimulationTable } from "@/components/admin/SimulationTable";
+import { Plus, Eye, Play, Loader2 } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import { InteractiveDrawSimulator } from "@/components/admin/InteractiveDrawSimulator";
 
-export default function DrawsPage() {
-  const { data: drawHistory = [], isLoading } = useDraws();
-  
+export default async function DrawsPage() {
+  const supabase = await createClient();
+
+  const [{ data: drawHistory, error }, { count: totalWinners }] = await Promise.all([
+    supabase.from("draws").select("*").order("draw_month", { ascending: false }),
+    supabase.from("winners").select("*", { count: "exact", head: true }),
+  ]);
+
+  if (error) console.error("Failed to fetch draws", error);
+
+  const safeDraws = drawHistory || [];
+  const totalDraws = safeDraws.length;
+  const totalPoolCents = safeDraws.reduce((acc, d) => acc + (d.total_pool_cents || 0), 0);
+  const avgPoolCents = totalDraws > 0 ? Math.round(totalPoolCents / totalDraws) : 0;
+
+  const formatMoney = (cents: number) => "$" + (cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 });
+
   return (
     <>
       {/* Header */}
@@ -28,31 +32,15 @@ export default function DrawsPage() {
             for prize distribution.
           </p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-sm hover:opacity-90 transition-opacity">
-          <Plus size={16} />
-          New Draw Cycle
-        </button>
       </section>
 
-      {/* Stats */}
+      {/* Stats — all dynamically computed */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Total Draws", value: "882", border: "border-primary" },
-          {
-            label: "Total Prize Pool",
-            value: "$4.2M",
-            border: "border-secondary",
-          },
-          {
-            label: "Total Winners",
-            value: "32,480",
-            border: "border-tertiary",
-          },
-          {
-            label: "Avg. Pool Size",
-            value: "$310K",
-            border: "border-primary-container",
-          },
+          { label: "Total Draws", value: totalDraws.toString(), border: "border-primary" },
+          { label: "Total Prize Pool", value: formatMoney(totalPoolCents), border: "border-secondary" },
+          { label: "Total Winners", value: (totalWinners || 0).toLocaleString(), border: "border-tertiary" },
+          { label: "Avg. Pool Size", value: formatMoney(avgPoolCents), border: "border-primary-container" },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -67,13 +55,8 @@ export default function DrawsPage() {
       </div>
 
       {/* Config + Live Simulation */}
-      <div className="grid grid-cols-12 gap-8 items-start">
-        <div className="col-span-12 lg:col-span-4">
-          <DrawConfigPanel />
-        </div>
-        <div className="col-span-12 lg:col-span-8">
-          <SimulationTable />
-        </div>
+      <div className="w-full mb-12">
+        <InteractiveDrawSimulator />
       </div>
 
       {/* Draw History */}
@@ -94,16 +77,13 @@ export default function DrawsPage() {
                   Date
                 </th>
                 <th className="px-8 py-4 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
-                  Type
-                </th>
-                <th className="px-8 py-4 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
-                  Entries
+                  Winning Numbers
                 </th>
                 <th className="px-8 py-4 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
                   Prize Pool
                 </th>
                 <th className="px-8 py-4 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
-                  Winners
+                  Rollover
                 </th>
                 <th className="px-8 py-4 font-label text-[10px] uppercase tracking-[0.2em] text-outline">
                   Status
@@ -114,62 +94,60 @@ export default function DrawsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/5">
-              {isLoading ? (
+              {safeDraws.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-8 py-20 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                  </td>
-                </tr>
-              ) : drawHistory.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-8 py-10 text-center text-on-surface-variant">
-                    No draws found.
+                  <td colSpan={7} className="px-8 py-10 text-center text-on-surface-variant">
+                    No draws found. Run a simulation above to get started.
                   </td>
                 </tr>
               ) : (
-                drawHistory.map((d: any) => (
-                <tr
-                  key={d.id}
-                  className="group hover:bg-surface-container-highest/30 transition-colors"
-                >
-                  <td className="px-8 py-5 font-mono text-primary font-bold text-sm">
-                    {d.id.substring(0, 8)}
-                  </td>
-                  <td className="px-8 py-5 text-sm">{d.draw_month}</td>
-                  <td className="px-8 py-5">
-                    <span className="px-2 py-1 rounded-md bg-surface-container-highest text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                      Random
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-sm font-mono">—</td>
-                  <td className="px-8 py-5 text-sm font-mono font-bold">
-                    ${(d.total_pool_cents / 100).toFixed(2)}
-                  </td>
-                  <td className="px-8 py-5 text-sm">—</td>
-                  <td className="px-8 py-5">
-                    <span
-                      className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${
-                        d.status === "Published"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                      }`}
-                    >
-                      {d.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
-                        <Eye size={14} />
-                      </button>
-                      {d.status === "Scheduled" && (
+                safeDraws.map((d) => (
+                  <tr
+                    key={d.id}
+                    className="group hover:bg-surface-container-highest/30 transition-colors"
+                  >
+                    <td className="px-8 py-5 font-mono text-primary font-bold text-sm">
+                      {d.id.substring(0, 8)}
+                    </td>
+                    <td className="px-8 py-5 text-sm">
+                      {d.draw_month ? new Date(d.draw_month).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex gap-1.5">
+                        {(d.winning_numbers || []).map((n: number, i: number) => (
+                          <span
+                            key={i}
+                            className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center"
+                          >
+                            {n}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-sm font-mono font-bold">
+                      {formatMoney(d.total_pool_cents || 0)}
+                    </td>
+                    <td className="px-8 py-5 text-sm font-mono text-on-surface-variant">
+                      {formatMoney(d.rollover_cents || 0)}
+                    </td>
+                    <td className="px-8 py-5">
+                      <span
+                        className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest border ${d.status === "Published"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          }`}
+                      >
+                        {d.status || "Draft"}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-2">
                         <button className="p-2 rounded-lg hover:bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
-                          <Play size={14} />
+                          <Eye size={14} />
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                      </div>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>

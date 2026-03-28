@@ -93,11 +93,11 @@ export async function updateSession(request: NextRequest) {
 
       if (pathname === "/") {
         const url = request.nextUrl.clone();
-        url.pathname = profile?.role === "ADMIN" ? "/admin" : "/dashboard";
+        url.pathname = profile?.role === "admin" ? "/admin" : "/dashboard";
         return NextResponse.redirect(url);
       }
 
-      if (isAdminRoute && profile?.role !== "ADMIN") {
+      if (isAdminRoute && profile?.role !== "admin") {
         const url = request.nextUrl.clone();
         url.pathname = "/dashboard";
         return NextResponse.redirect(url);
